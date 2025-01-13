@@ -2,14 +2,10 @@ import "./App.css";
 import Header from "@/components/Header";
 import MsgBox from "@/components/MsgBox";
 import InputBox from "@/components/InputBox";
-import { useEffect, useState, useRef, MutableRefObject } from "react";
-import { io, Socket } from "socket.io-client";
-
-interface Message {
-  text: string;
-  createdAt: string;
-  senderSocketId: string;
-}
+import { useEffect, useState } from "react";
+import useWebSocket from "./hooks/useWebSocket";
+import { fetchMessages } from "./api/Message";
+import { Message } from "./common/type";
 
 const server = import.meta.env.VITE_HOST
 
@@ -18,7 +14,6 @@ function App() {
   const [message, setMessage] = useState("");
   const [messageHistory, setMessageHistory] = useState<Message[]>([]);
 
-  let socketRef: MutableRefObject<Socket | null> = useRef(null);
 
   // update message list when received new msg
   const newMessageReceived = (message: Message) => {
@@ -26,22 +21,16 @@ function App() {
     setMessageHistory((prev) => [...prev!, message]);
   };
 
+  const socketRef = useWebSocket<Message>(server, "chat-message", newMessageReceived);
+
   useEffect(() => {
-    async function fetchMessages() {
-      const response = await fetch(`${server}/messages`);
-      const data = await response.json();
+    async function loadMessages() {
+      const data = await fetchMessages();
       setMessageHistory(data);
     }
-    fetchMessages();
+    loadMessages();
 
     console.log(messageHistory, ":: MessageHistory")
-
-    socketRef.current = io(server);
-    socketRef.current.on("chat-message", newMessageReceived);
-
-    return () => {
-      socketRef.current?.off("chat-message", newMessageReceived);
-    };
   }, []);
 
   const handleSendMessage = (e: any) => {

@@ -39,6 +39,7 @@ function App() {
     setMessage("");
     console.log("send message:" + msg);
 
+    // send message through websocket
     socketRef.current?.emit("chat-message", msg);
   };
 

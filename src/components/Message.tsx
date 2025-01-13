@@ -1,5 +1,5 @@
 export interface MessageProps {
-  sender: string;
+  sender?: string;
   text: string;
   timestamp: string;
   isUser?: boolean; // Indicates if the message is from the current user
